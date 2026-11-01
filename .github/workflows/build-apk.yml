@@ -46,24 +46,7 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || yes | sdkmanager --licenses 2>/dev/null || true
 
       - name: 🔧 Patch Compose Compiler & Kotlin Compatibility
-        run: |
-          # 1. Pastikan expo-modules-core menggunakan Compose Compiler 1.5.14 yang cocok dengan Kotlin 1.9.24
-          sed -i 's/"1.5.15"/"1.5.14"/g' node_modules/expo-modules-core/android/build.gradle || true
-          
-          # 2. Tambahkan suppress check ke build.gradle untuk semua subproject Kotlin
-          cat << 'EOF' >> android/build.gradle
-
-allprojects {
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-        kotlinOptions {
-            freeCompilerArgs += [
-                "-P",
-                "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
-            ]
-        }
-    }
-}
-EOF
+        run: bash scripts/patch-android.sh
 
       - name: 🔨 Build Android APK with Gradle
         working-directory: android
