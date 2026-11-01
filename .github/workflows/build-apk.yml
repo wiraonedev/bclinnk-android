@@ -35,14 +35,15 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: 🤖 Setup Android SDK Tools
-        uses: android-actions/setup-android@v3
-
       - name: 📦 Install Node Dependencies
-        run: npm install
+        run: npm ci
 
       - name: ⚙️ Generate Android Native Project (Expo Prebuild)
-        run: npx expo prebuild --platform android --clean
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: 🤖 Accept Android SDK Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || yes | sdkmanager --licenses 2>/dev/null || true
 
       - name: 🔨 Build Android APK with Gradle
         working-directory: android
