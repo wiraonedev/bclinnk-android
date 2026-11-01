@@ -6,7 +6,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { WebView, type WebViewNavigation } from 'react-native-webview';
+import { WebView } from 'react-native-webview';
 import { APP_CONFIG } from '../config/appConfig';
 import { handleNavigationRequest } from '../utils/urlHandler';
 import { useBackButton } from '../hooks/useBackButton';
@@ -15,13 +15,7 @@ import { OfflineView } from './OfflineView';
 
 export const BclinnkWebView: React.FC = () => {
   const webViewRef = useRef<WebView>(null);
-  const [navState, setNavState] = useState<WebViewNavigation>({
-    canGoBack: false,
-    canGoForward: false,
-    loading: false,
-    title: '',
-    url: APP_CONFIG.initialUrl,
-  });
+  const [canGoBack, setCanGoBack] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [hasError, setHasError] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -29,7 +23,7 @@ export const BclinnkWebView: React.FC = () => {
   // Hook penanganan tombol Back fisik Android
   useBackButton({
     webViewRef,
-    canGoBack: navState.canGoBack,
+    canGoBack,
   });
 
   const handleRetry = useCallback(() => {
@@ -90,7 +84,7 @@ export const BclinnkWebView: React.FC = () => {
             setProgress(nativeEvent.progress);
           }}
           onNavigationStateChange={(state) => {
-            setNavState(state);
+            setCanGoBack(state.canGoBack);
             if (!state.loading) {
               setIsRefreshing(false);
             }
