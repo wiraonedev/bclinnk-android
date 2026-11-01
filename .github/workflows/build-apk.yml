@@ -45,11 +45,25 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || yes | sdkmanager --licenses 2>/dev/null || true
 
-      - name: 🔧 Configure Kotlin 1.9.25 for Compose Compatibility
+      - name: 🔧 Patch Compose Compiler & Kotlin Compatibility
         run: |
-          echo "android.kotlinVersion=1.9.25" >> android/gradle.properties
-          echo "kotlinVersion=1.9.25" >> android/gradle.properties
-          sed -i 's/1.9.24/1.9.25/g' android/build.gradle || true
+          # 1. Pastikan expo-modules-core menggunakan Compose Compiler 1.5.14 yang cocok dengan Kotlin 1.9.24
+          sed -i 's/"1.5.15"/"1.5.14"/g' node_modules/expo-modules-core/android/build.gradle || true
+          
+          # 2. Tambahkan suppress check ke build.gradle untuk semua subproject Kotlin
+          cat << 'EOF' >> android/build.gradle
+
+allprojects {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            freeCompilerArgs += [
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+            ]
+        }
+    }
+}
+EOF
 
       - name: 🔨 Build Android APK with Gradle
         working-directory: android
@@ -57,10 +71,10 @@ jobs:
           chmod +x gradlew
           if [ "${{ github.event.inputs.build_type }}" = "release" ] || [ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ]; then
             echo "Memulai build Release APK..."
-            ./gradlew assembleRelease --no-daemon -Pandroid.kotlinVersion=1.9.25 -PkotlinVersion=1.9.25
+            ./gradlew assembleRelease --no-daemon
           else
             echo "Memulai build Debug APK..."
-            ./gradlew assembleDebug --no-daemon -Pandroid.kotlinVersion=1.9.25 -PkotlinVersion=1.9.25
+            ./gradlew assembleDebug --no-daemon
           fi
 
       - name: 📤 Upload APK Artifacts ke GitHub Actions
