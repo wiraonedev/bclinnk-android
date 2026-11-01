@@ -45,16 +45,22 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || yes | sdkmanager --licenses 2>/dev/null || true
 
+      - name: 🔧 Configure Kotlin 1.9.25 for Compose Compatibility
+        run: |
+          echo "android.kotlinVersion=1.9.25" >> android/gradle.properties
+          echo "kotlinVersion=1.9.25" >> android/gradle.properties
+          sed -i 's/1.9.24/1.9.25/g' android/build.gradle || true
+
       - name: 🔨 Build Android APK with Gradle
         working-directory: android
         run: |
           chmod +x gradlew
           if [ "${{ github.event.inputs.build_type }}" = "release" ] || [ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ]; then
             echo "Memulai build Release APK..."
-            ./gradlew assembleRelease --no-daemon
+            ./gradlew assembleRelease --no-daemon -Pandroid.kotlinVersion=1.9.25 -PkotlinVersion=1.9.25
           else
             echo "Memulai build Debug APK..."
-            ./gradlew assembleDebug --no-daemon
+            ./gradlew assembleDebug --no-daemon -Pandroid.kotlinVersion=1.9.25 -PkotlinVersion=1.9.25
           fi
 
       - name: 📤 Upload APK Artifacts ke GitHub Actions
