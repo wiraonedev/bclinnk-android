@@ -69,6 +69,9 @@ export const BclinnkWebView: React.FC = () => {
           domStorageEnabled={true}
           thirdPartyCookiesEnabled={true}
           sharedCookiesEnabled={true}
+          cacheEnabled={true}
+          cacheMode="LOAD_DEFAULT"
+          allowFileAccess={true}
           setSupportMultipleWindows={false}
           scalesPageToFit={false}
           mixedContentMode="compatibility"

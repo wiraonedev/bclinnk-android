@@ -1,15 +1,16 @@
-# Bclinnk Android WebView App (React Native)
+# Bclinnk CM - Android WebView App (React Native)
 
-Aplikasi Android WebView wrapper berbasis React Native & Expo untuk platform reservasi kamar dan properti **Bclinnk** (dengan default konfigurasi grup **Bali Cabin**).
+Aplikasi Android WebView wrapper berbasis React Native & Expo untuk portal **Bclinnk Channel Manager (Extranet)** (`https://cm.bclinnk.com/`).
 
-Aplikasi ini dirancang khusus untuk menangani tantangan WebView pada alur booking hotel/kamar:
-- **Google reCAPTCHA v2 support** (User-Agent Mobile Chrome standar & persistent session cookies).
-- **Penanganan Link `target="_blank"`** (tidak macet saat klik "View Rooms").
-- **Pembayaran Aman & Deep Linking** (dukungan redirect bank 3D-Secure, QRIS, GoPay, OVO, Dana, ShopeePay via `Linking.openURL()`).
-- **In-App Browser (Chrome Custom Tabs)** untuk membuka website eksternal (website hotel, media sosial) tanpa keluar dari alur pemesanan.
-- **Android Back Button** (mundur riwayat halaman WebView dan double-tap untuk keluar aplikasi).
-- **Resilience & Offline Screen** (tampilan error offline yang ramah pengguna dengan tombol Coba Lagi).
-- **100% Free Cloud Build** via GitHub Actions (menghasilkan file `.apk` tanpa perlu install Android Studio di komputer lokal).
+Aplikasi ini dirancang khusus untuk operasional staf dan pengelola hotel/properti:
+- **Target Portal**: `https://cm.bclinnk.com/` (Channel Manager & Operasional Kamar).
+- **Persistent Session & Caching**: Sesi login dan cookies disimpan secara persisten sehingga pengguna tidak perlu login berulang kali setiap membuka aplikasi.
+- **Dukungan Unduh Laporan**: Link ekspor laporan (Excel, PDF, CSV) otomatis dialihkan ke Download Manager native Android.
+- **Dukungan Unggah Berkas & Kamera**: Mendukung `<input type="file">` untuk unggah foto properti atau dokumen dengan izin kamera dan penyimpanan Android.
+- **In-App Browser (Chrome Custom Tabs)** untuk membuka tautan eksternal (OTA eksternal, WhatsApp, portal bank) tanpa menutup aplikasi.
+- **Android Back Button**: Navigasi mundur riwayat WebView dan proteksi double-tap untuk keluar aplikasi.
+- **Resilience & Offline Screen**: Tampilan offline yang ramah pengguna dengan tombol Coba Lagi jika koneksi internet terputus.
+- **100% Free Cloud Build**: Dibuat langsung menjadi file `.apk` standalone yang siap di-install (*sideload*) melalui GitHub Actions tanpa butuh Android Studio lokal.
 
 ---
 

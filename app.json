@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bclinnk",
+    "name": "Bclinnk CM",
     "slug": "bclinnk-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,7 +20,10 @@
       "package": "com.bclinnk.app",
       "permissions": [
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA"
       ]
     },
     "web": {

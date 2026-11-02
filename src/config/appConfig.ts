@@ -4,16 +4,16 @@
  */
 export const APP_CONFIG = {
   // Nama aplikasi
-  appName: 'Bclinnk',
+  appName: 'Bclinnk CM',
 
-  // URL awal yang akan dimuat oleh WebView
-  initialUrl: 'https://booking.bclinnk.com/booking-group2.php?id=bali-cabin',
+  // URL awal yang akan dimuat oleh WebView (Channel Manager Extranet)
+  initialUrl: 'https://cm.bclinnk.com/',
 
   // Domain internal yang diperbolehkan tetap dibuka di dalam WebView
   allowedDomains: [
+    'cm.bclinnk.com',
     'booking.bclinnk.com',
     'bclinnk.com',
-    'payku.php', // sub-path payment payku internal
   ],
 
   // User-Agent standar Chrome Mobile untuk memastikan kompatibilitas reCAPTCHA & responsive viewport

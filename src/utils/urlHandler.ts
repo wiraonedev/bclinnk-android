@@ -3,14 +3,37 @@ import * as WebBrowser from 'expo-web-browser';
 import { APP_CONFIG } from '../config/appConfig';
 
 /**
- * Memeriksa apakah URL merupakan domain internal bclinnk
+ * Memeriksa apakah URL merupakan domain internal bclinnk (*.bclinnk.com)
  */
 export function isInternalUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return APP_CONFIG.allowedDomains.some((domain) =>
-      parsed.hostname.toLowerCase().endsWith(domain.toLowerCase())
+    const hostname = parsed.hostname.toLowerCase();
+    return APP_CONFIG.allowedDomains.some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
     );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Memeriksa apakah URL merupakan berkas unduhan/laporan (Excel, PDF, CSV, dll)
+ */
+export function isDownloadableFile(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const pathname = parsed.pathname.toLowerCase();
+    const downloadExtensions = [
+      '.xlsx',
+      '.xls',
+      '.pdf',
+      '.csv',
+      '.zip',
+      '.doc',
+      '.docx',
+    ];
+    return downloadExtensions.some((ext) => pathname.endsWith(ext));
   } catch {
     return false;
   }
@@ -67,12 +90,22 @@ export async function handleNavigationRequest(url: string): Promise<boolean> {
     return false;
   }
 
-  // 2. Tangani Domain Internal Bclinnk (Tetap di dalam WebView)
+  // 2. Tangani Unduhan Berkas / Laporan (Excel, PDF, CSV, dll ke Download Manager)
+  if (isDownloadableFile(url)) {
+    try {
+      await Linking.openURL(url);
+    } catch (err) {
+      console.warn('Gagal membuka berkas unduhan via native linking:', url, err);
+    }
+    return false;
+  }
+
+  // 3. Tangani Domain Internal Bclinnk (Tetap di dalam WebView)
   if (isInternalUrl(url)) {
     return true;
   }
 
-  // 3. Tangani Domain Eksternal (buka via Chrome Custom Tabs In-App Browser)
+  // 4. Tangani Domain Eksternal (buka via Chrome Custom Tabs In-App Browser)
   if (url.startsWith('http://') || url.startsWith('https://')) {
     try {
       await WebBrowser.openBrowserAsync(url, {
