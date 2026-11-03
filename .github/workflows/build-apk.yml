@@ -61,10 +61,8 @@ jobs:
           fi
 
       - name: 📤 Upload APK Artifacts ke GitHub Actions
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: bclinnk-android-apk
-          path: |
-            android/app/build/outputs/apk/debug/*.apk
-            android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/*/*.apk
           retention-days: 14
