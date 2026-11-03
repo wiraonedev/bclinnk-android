@@ -17,14 +17,14 @@ Notifications.setNotificationHandler({
   }),
 });
 
+let isChannelCreated = false;
+
 /**
- * Inisialisasi Channel Android & Meminta Izin Notifikasi (Android 13+)
- * Mengembalikan Device Push Token (FCM) jika Firebase sudah dikonfigurasi
+ * Memastikan Notification Channel prioritas tinggi sudah terdaftar di Android (Android 8.0+)
  */
-export async function initializeNotifications(): Promise<string | null> {
-  try {
-    // 1. Buat Notification Channel Prioritas Tinggi untuk Android 8.0+
-    if (Platform.OS === 'android') {
+export async function ensureNotificationChannel(): Promise<void> {
+  if (Platform.OS === 'android' && !isChannelCreated) {
+    try {
       await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
         name: 'Notifikasi Operasional & Reservasi',
         description: 'Pemberitahuan booking baru, pembatalan, dan update Channel Manager',
@@ -35,24 +35,38 @@ export async function initializeNotifications(): Promise<string | null> {
         enableLights: true,
         showBadge: true,
       });
+      isChannelCreated = true;
+    } catch (err) {
+      console.warn('Gagal membuat notification channel Android:', err);
+    }
+  }
+}
+
+/**
+ * Inisialisasi Channel Android & Meminta Izin Notifikasi (Android 13+)
+ * Mengembalikan Device Push Token (FCM) jika Firebase sudah dikonfigurasi
+ */
+export async function initializeNotifications(): Promise<string | null> {
+  try {
+    // 1. Buat Notification Channel Prioritas Tinggi untuk Android 8.0+
+    await ensureNotificationChannel();
+
+    // 2. Cek dan minta izin POST_NOTIFICATIONS
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
     }
 
-    // 2. Cek dan minta izin POST_NOTIFICATIONS pada perangkat fisik
+    if (finalStatus !== 'granted') {
+      console.warn('Izin Push Notification belum diberikan oleh pengguna.');
+      return null;
+    }
+
+    // 3. Coba ambil Native Device Push Token (FCM) jika pada perangkat fisik & google-services.json tersedia
     if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        console.warn('Izin Push Notification belum diberikan oleh pengguna.');
-        return null;
-      }
-
-      // 3. Coba ambil Native Device Push Token (FCM) jika google-services.json tersedia
       try {
         const tokenData = await Notifications.getDevicePushTokenAsync();
         return tokenData.data;
@@ -78,6 +92,10 @@ export async function triggerNativeNotification(
   delaySeconds = 0
 ): Promise<string | null> {
   try {
+    // Pastikan channel sudah dibuat sebelum menampilkan notifikasi
+    await ensureNotificationChannel();
+
+    // Gunakan ChannelAwareTriggerInput untuk instan atau SchedulableTriggerInput untuk terjadwal
     const trigger: Notifications.NotificationTriggerInput =
       delaySeconds > 0
         ? {
@@ -85,7 +103,9 @@ export async function triggerNativeNotification(
             seconds: delaySeconds,
             channelId: ANDROID_CHANNEL_ID,
           }
-        : null;
+        : {
+            channelId: ANDROID_CHANNEL_ID,
+          };
 
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
@@ -93,6 +113,7 @@ export async function triggerNativeNotification(
         body: body || '',
         data,
         sound: 'default',
+        color: APP_CONFIG.colors.primary,
         priority: Notifications.AndroidNotificationPriority.MAX,
       },
       trigger,

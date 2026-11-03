@@ -23,8 +23,12 @@ export const INJECTED_WEBVIEW_BRIDGE_JS = `
   window.__BCLINNK_PUSH_TOKEN__ = window.__BCLINNK_PUSH_TOKEN__ || null;
 
   function postToNative(payload) {
-    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-      window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+    try {
+      if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+        window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+      }
+    } catch (_) {
+      // Safe fallback jika context belum siap
     }
   }
 
@@ -35,7 +39,7 @@ export const INJECTED_WEBVIEW_BRIDGE_JS = `
         type: 'NOTIFY',
         title: String(title || 'Bclinnk CM'),
         body: String(body || ''),
-        data: data || {}
+        data: data && typeof data === 'object' ? data : {}
       });
     },
     scheduleNotification: function(title, body, delaySeconds, data) {
@@ -43,8 +47,8 @@ export const INJECTED_WEBVIEW_BRIDGE_JS = `
         type: 'SCHEDULE_NOTIFICATION',
         title: String(title || 'Bclinnk CM'),
         body: String(body || ''),
-        delaySeconds: Number(delaySeconds) || 1,
-        data: data || {}
+        delaySeconds: Math.max(1, Math.floor(Number(delaySeconds) || 1)),
+        data: data && typeof data === 'object' ? data : {}
       });
     },
     getPushToken: function() {
@@ -53,27 +57,42 @@ export const INJECTED_WEBVIEW_BRIDGE_JS = `
     }
   };
 
-  // 2. Polyfill HTML5 Web Notification API agar mendukung Android WebView
+  // 2. Polyfill Standar HTML5 Web Notification API agar kompatibel dengan Android WebView
   function CustomWebNotification(title, options) {
-    var opts = options || {};
-    this.title = title;
-    this.body = opts.body || '';
-    this.data = opts.data || {};
+    var opts = (options && typeof options === 'object') ? options : {};
+    this.title = String(title || 'Bclinnk CM');
+    this.body = String(opts.body || '');
+    this.data = (opts.data && typeof opts.data === 'object') ? opts.data : {};
+    this.tag = opts.tag || '';
+    this.icon = opts.icon || '';
+
+    // Standard HTML5 Notification methods & handlers
+    this.close = function() {};
+    this.onclick = null;
+    this.onerror = null;
+    this.onclose = null;
+    this.onshow = null;
+
     postToNative({
       type: 'NOTIFY',
-      title: String(title || 'Bclinnk CM'),
-      body: String(this.body),
+      title: this.title,
+      body: this.body,
       data: this.data
     });
   }
+
   CustomWebNotification.permission = 'granted';
+  CustomWebNotification.maxActions = 2;
   CustomWebNotification.requestPermission = function(callback) {
-    if (typeof callback === 'function') callback('granted');
+    if (typeof callback === 'function') {
+      try { callback('granted'); } catch (_) {}
+    }
     return Promise.resolve('granted');
   };
+
   window.Notification = CustomWebNotification;
 
-  // Minta token saat halaman selesai dimuat
+  // Minta token FCM dari native saat halaman dimuat
   postToNative({ type: 'REQUEST_PUSH_TOKEN' });
 })();
 true;

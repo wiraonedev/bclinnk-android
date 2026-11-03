@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -32,21 +32,40 @@ export const BclinnkWebView: React.FC = () => {
     canGoBack,
   });
 
+  const injectJsToWebView = useCallback((jsCode: string) => {
+    if (webViewRef.current) {
+      webViewRef.current.injectJavaScript(jsCode);
+    }
+  }, []);
+
   // Hook inisialisasi Push Notification & Deep Navigation saat notifikasi di-tap
   const handleNavigateFromNotification = useCallback((targetUrl: string) => {
     setHasError(false);
-    setCurrentUri(targetUrl);
+    setCurrentUri((prev) => {
+      if (prev === targetUrl && webViewRef.current) {
+        webViewRef.current.reload();
+      }
+      return targetUrl;
+    });
   }, []);
 
   const { pushToken } = useNotifications({
     onNavigateToUrl: handleNavigateFromNotification,
   });
 
-  const injectJsToWebView = useCallback((jsCode: string) => {
-    if (webViewRef.current) {
-      webViewRef.current.injectJavaScript(jsCode);
+  // Sinkronisasi pushToken ke WebView saat token siap
+  useEffect(() => {
+    if (pushToken && webViewRef.current) {
+      const safeToken = JSON.stringify(pushToken);
+      injectJsToWebView(`
+        window.__BCLINNK_PUSH_TOKEN__ = ${safeToken};
+        try {
+          window.dispatchEvent(new CustomEvent('bclinnk:pushToken', { detail: { token: ${safeToken} } }));
+        } catch (_) {}
+        true;
+      `);
     }
-  }, []);
+  }, [pushToken, injectJsToWebView]);
 
   const handleRetry = useCallback(() => {
     setHasError(false);
@@ -99,6 +118,7 @@ export const BclinnkWebView: React.FC = () => {
           mixedContentMode="compatibility"
           userAgent={APP_CONFIG.customUserAgent}
           allowsBackForwardNavigationGestures={true}
+          injectedJavaScriptBeforeContentLoaded={INJECTED_WEBVIEW_BRIDGE_JS}
           injectedJavaScript={INJECTED_WEBVIEW_BRIDGE_JS}
           onMessage={({ nativeEvent }) => {
             handleWebViewBridgeMessage(

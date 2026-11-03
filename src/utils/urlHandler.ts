@@ -7,6 +7,10 @@ import { APP_CONFIG } from '../config/appConfig';
  */
 export function isInternalUrl(url: string): boolean {
   try {
+    if (!url) return false;
+    // Path relatif (misal: /reservations/10) dianggap internal terhadap aplikasi
+    if (url.startsWith('/')) return true;
+
     const parsed = new URL(url);
     const hostname = parsed.hostname.toLowerCase();
     return APP_CONFIG.allowedDomains.some(
