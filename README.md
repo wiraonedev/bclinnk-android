@@ -10,7 +10,37 @@ Aplikasi ini dirancang khusus untuk operasional staf dan pengelola hotel/propert
 - **In-App Browser (Chrome Custom Tabs)** untuk membuka tautan eksternal (OTA eksternal, WhatsApp, portal bank) tanpa menutup aplikasi.
 - **Android Back Button**: Navigasi mundur riwayat WebView dan proteksi double-tap untuk keluar aplikasi.
 - **Resilience & Offline Screen**: Tampilan offline yang ramah pengguna dengan tombol Coba Lagi jika koneksi internet terputus.
+- **Hybrid Push Notification (`expo-notifications`)**: Mendukung notifikasi Android native via WebView JS Bridge (`window.BclinnkNative.notify`), polyfill otomatis HTML5 `new Notification()`, Deep Navigation saat notifikasi di-tap, serta siap dihubungkan ke Firebase Cloud Messaging (`google-services.json`).
 - **100% Free Cloud Build**: Dibuat langsung menjadi file `.apk` standalone yang siap di-install (*sideload*) melalui GitHub Actions tanpa butuh Android Studio lokal.
+
+---
+
+## 🔔 Cara Menggunakan Fitur Push Notification dari Website (`cm.bclinnk.com`)
+
+Aplikasi ini telah menyuntikkan jembatan JavaScript (*JS Bridge*) ke dalam halaman `cm.bclinnk.com`:
+
+### 1. Memicu Notifikasi Langsung dari Kode Web / Console
+```javascript
+// Cara A: Menggunakan helper resmi BclinnkNative
+window.BclinnkNative.notify(
+  'Reservasi Baru Masuk!',
+  'Kamar Deluxe - Check-in 15 Nov',
+  { url: 'https://cm.bclinnk.com/' } // Opsional: URL tujuan saat notifikasi di-tap
+);
+
+// Cara B: Menggunakan standar HTML5 Web Notification (otomatis di-polyfill ke Android Native)
+new Notification('Booking Baru #INV-001', {
+  body: 'Tamu: Budi Santoso (2 Malam)',
+  data: { url: 'https://cm.bclinnk.com/' }
+});
+```
+
+### 2. Mengaktifkan Remote FCM (Saat Aplikasi Ditutup Total)
+Secara default, build GitHub Actions tetap berjalan lancar meskipun belum ada file `google-services.json`. Jika tim backend siap mengirim Remote Push via Firebase:
+1. Buat project di [Firebase Console](https://console.firebase.google.com/) dan daftarkan aplikasi Android dengan package ID **`com.bclinnk.app`**.
+2. Unduh file **`google-services.json`** dan letakkan di folder utama (root) repositori ini.
+3. File [`app.config.js`](file:///Users/raiwirawan/Desktop/MAGANG_BC_SOLUTIONS_2026/WEBSITE_DEVELOPMENT/November/01-11-2026-membuat-aplikasi-android-bclinnk/app.config.js) akan otomatis mendeteksinya saat proses build.
+4. Di sisi web `cm.bclinnk.com`, ambil token perangkat menggunakan `window.BclinnkNative.getPushToken()` untuk disimpan ke database user hotel.
 
 ---
 

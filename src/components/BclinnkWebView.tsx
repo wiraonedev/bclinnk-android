@@ -9,12 +9,18 @@ import {
 import { WebView } from 'react-native-webview';
 import { APP_CONFIG } from '../config/appConfig';
 import { handleNavigationRequest } from '../utils/urlHandler';
+import {
+  INJECTED_WEBVIEW_BRIDGE_JS,
+  handleWebViewBridgeMessage,
+} from '../utils/webViewBridge';
 import { useBackButton } from '../hooks/useBackButton';
+import { useNotifications } from '../hooks/useNotifications';
 import { LoadingBar } from './LoadingBar';
 import { OfflineView } from './OfflineView';
 
 export const BclinnkWebView: React.FC = () => {
   const webViewRef = useRef<WebView>(null);
+  const [currentUri, setCurrentUri] = useState<string>(APP_CONFIG.initialUrl);
   const [canGoBack, setCanGoBack] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [hasError, setHasError] = useState<boolean>(false);
@@ -25,6 +31,22 @@ export const BclinnkWebView: React.FC = () => {
     webViewRef,
     canGoBack,
   });
+
+  // Hook inisialisasi Push Notification & Deep Navigation saat notifikasi di-tap
+  const handleNavigateFromNotification = useCallback((targetUrl: string) => {
+    setHasError(false);
+    setCurrentUri(targetUrl);
+  }, []);
+
+  const { pushToken } = useNotifications({
+    onNavigateToUrl: handleNavigateFromNotification,
+  });
+
+  const injectJsToWebView = useCallback((jsCode: string) => {
+    if (webViewRef.current) {
+      webViewRef.current.injectJavaScript(jsCode);
+    }
+  }, []);
 
   const handleRetry = useCallback(() => {
     setHasError(false);
@@ -63,7 +85,7 @@ export const BclinnkWebView: React.FC = () => {
       >
         <WebView
           ref={webViewRef}
-          source={{ uri: APP_CONFIG.initialUrl }}
+          source={{ uri: currentUri }}
           style={styles.webView}
           javaScriptEnabled={true}
           domStorageEnabled={true}
@@ -77,6 +99,14 @@ export const BclinnkWebView: React.FC = () => {
           mixedContentMode="compatibility"
           userAgent={APP_CONFIG.customUserAgent}
           allowsBackForwardNavigationGestures={true}
+          injectedJavaScript={INJECTED_WEBVIEW_BRIDGE_JS}
+          onMessage={({ nativeEvent }) => {
+            handleWebViewBridgeMessage(
+              nativeEvent.data,
+              pushToken,
+              injectJsToWebView
+            );
+          }}
           startInLoadingState={true}
           renderLoading={() => (
             <View style={styles.loadingContainer}>

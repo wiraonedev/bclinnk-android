@@ -12,6 +12,9 @@
   "dependencies": {
     "@react-native-community/netinfo": "11.4.1",
     "expo": "~52.0.28",
+    "expo-constants": "~17.0.8",
+    "expo-device": "~7.0.3",
+    "expo-notifications": "~0.29.14",
     "expo-status-bar": "~2.0.1",
     "expo-web-browser": "~14.0.2",
     "react": "18.3.1",
