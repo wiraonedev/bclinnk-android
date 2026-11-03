@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { APP_CONFIG } from '../config/appConfig';
 
 interface OfflineViewProps {
@@ -13,13 +13,18 @@ export const OfflineView: React.FC<OfflineViewProps> = ({
 }) => {
   return (
     <View style={styles.container}>
+      <Image
+        source={require('../../assets/BCLinnk-Logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
       <View style={styles.iconContainer}>
         <Text style={styles.icon}>📡</Text>
       </View>
       <Text style={styles.title}>Koneksi Terputus</Text>
       <Text style={styles.description}>
         {errorMessage ||
-          'Tidak dapat memuat halaman pemesanan. Periksa koneksi internet Anda dan coba lagi.'}
+          'Tidak dapat memuat halaman Channel Manager. Periksa koneksi internet Anda dan coba lagi.'}
       </Text>
       <TouchableOpacity
         style={styles.retryButton}
@@ -41,14 +46,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     zIndex: 900,
   },
+  logo: {
+    width: 200,
+    height: 50,
+    marginBottom: 20,
+  },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   icon: {
     fontSize: 36,
